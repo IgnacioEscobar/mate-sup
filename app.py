@@ -6,8 +6,8 @@ from tkinter import ttk
 poly_creator = np.polynomial.polynomial
 polinomio_interpolacion =[]
 
-puntosx = [];
-puntosy = [];
+puntosx = [1,2,5,8,9];
+puntosy = [0,5,104,455,656];
 
 
 
@@ -120,7 +120,7 @@ def sacarPolinomioProgresivo(matriz_coeficientes, hayQueMostrarCalculos):
         coeficientes_progresivo.append(matriz_coeficientes[i+1][0])
     if hayQueMostrarCalculos:
         print("\nLos coeficientes del polinomio progresivo son: " + str(coeficientes_progresivo))
-    armarPolinomioInterpolanteNG(coeficientes_progresivo)
+    armarPolinomioInterpolanteNGPROG(coeficientes_progresivo)
 
 
 def sacarPolinomioRegresivo(matriz_coeficientes, hayQueMostrarCalculos):
@@ -129,12 +129,12 @@ def sacarPolinomioRegresivo(matriz_coeficientes, hayQueMostrarCalculos):
         coeficientes_progresivo.append(matriz_coeficientes[i+1][len(puntosx)-1-i])
     if hayQueMostrarCalculos:
         print("\nLos coeficientes del polinomio Regresivo son: " + str(coeficientes_progresivo))
-    armarPolinomioInterpolanteNG(coeficientes_progresivo)
+    armarPolinomioInterpolanteNGREG(coeficientes_progresivo)
 
 
 
 
-def armarPolinomioInterpolanteNG(coeficientes):
+def armarPolinomioInterpolanteNGPROG(coeficientes):
     polinomioDeRaices = [1]
     polinomioInterpolante = [0]
     for i in range(len(coeficientes) - 1):
@@ -151,6 +151,25 @@ def armarPolinomioInterpolanteNG(coeficientes):
     polinomioInterpolante = voltearArray(polinomioInterpolante,len(coeficientes))
     global polinomio_interpolacion
     polinomio_interpolacion = polinomioInterpolante
+
+def armarPolinomioInterpolanteNGREG(coeficientes):
+    polinomioDeRaices = [1]
+    polinomioInterpolante = [0]
+    for i in range(len(coeficientes) - 1):
+
+        polinomioDeRaices = np.polymul(polinomioDeRaices, poly_creator.polyfromroots([puntosx[(len(coeficientes)-1-i)]]))
+        polinomioDeIteracion = coeficientes[i + 1] * polinomioDeRaices
+        polinomioDeIteracion = np.array(polinomioDeIteracion)
+        for j in range(i+1):
+            polinomioDeIteracion[j] = polinomioDeIteracion[j] + polinomioInterpolante[j]
+        polinomioInterpolante = polinomioDeIteracion
+
+    polinomioInterpolante[0] = polinomioInterpolante[0] + coeficientes[0]
+    mostrarPoliniomio(polinomioInterpolante,len(coeficientes))
+    polinomioInterpolante = voltearArray(polinomioInterpolante,len(coeficientes))
+    global polinomio_interpolacion
+    polinomio_interpolacion = polinomioInterpolante
+
 
 def voltearArray(arrayAVoltear,longitudArray):
     arrayVolteado = []
