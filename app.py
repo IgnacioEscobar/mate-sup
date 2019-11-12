@@ -2,7 +2,8 @@ import sys
 import tkinter as tk
 from tkinter import ttk
 
-lista = []
+puntosx = [];
+puntosy = [];
 
 class PrintLogger():
     def __init__(self, textbox):
@@ -60,12 +61,41 @@ class Application(ttk.Frame):
 
     def addPoint(self):
       self.points.append({'x': self.xValue.get(), 'y': self.yValue.get()})
+      puntosx.append(self.xValue.get())
+      puntosy.append(self.yValue.get())
       
     def calculateInterpolator(self):
-      print("Calculando por", self.methodCombo.get() ,"para puntos:", self.points)
-      pass
+        print("Calculando por", self.methodCombo.get(), "para puntos:", self.points);
+        if self.methodCombo.get() == "Lagrange":
+            print("Aca hago cosas de lagrange");
+        else :
+            if self.methodCombo.get() == "Newton-Gregory progresivo": sacarCoeficientesLagrange(puntosx,puntosy);
+            else: print("Aca hago cosas de Newton-Gregory regresivo");
+        pass
+
+def sacarCoeficientesLagrange (puntos_x,puntos_y):
+    cantidad_puntos = len(puntos_x);
+    matriz_coeficientes = [[0 for x in range(cantidad_puntos)] for y in range(cantidad_puntos+1)]
+    cantidad_iteraciones = cantidad_puntos -2
+    for i in range(cantidad_puntos): #meto los puntos iniciales a la matriz  de coeficientes
+        matriz_coeficientes[0][i] = puntos_x[i]
+        matriz_coeficientes[1][i] = puntos_y[i]
+
+    if cantidad_puntos > 1 :
+        for i in range(cantidad_puntos-1):
+            matriz_coeficientes[2][i] = (matriz_coeficientes[1][i+1] - matriz_coeficientes[1][i])/(matriz_coeficientes[0][i+1]-matriz_coeficientes[0][i])
+            print(matriz_coeficientes[2][i])
+    if cantidad_puntos > 2 :
+        for i in range (3, cantidad_puntos+1):
+            for j in range (cantidad_iteraciones):
+                matriz_coeficientes[i][j] = (matriz_coeficientes[i - 1][j + 1] - matriz_coeficientes[i - 1][j]) / (matriz_coeficientes[0][i-1+j]-matriz_coeficientes[0][j])
+                print(matriz_coeficientes[i][j])
+            cantidad_iteraciones = cantidad_iteraciones - 1
+
+
 
 if __name__ == '__main__':
   main_window = tk.Tk()
   app = Application(main_window)
   app.mainloop()
+
