@@ -6,8 +6,8 @@ from tkinter import ttk
 poly_creator = np.polynomial.polynomial
 polinomio_interpolacion =[]
 
-puntosx = [1,2,5,8,9];
-puntosy = [0,5,104,455,656];
+puntosx = [];
+puntosy = [];
 
 
 
