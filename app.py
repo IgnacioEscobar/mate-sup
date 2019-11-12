@@ -1,9 +1,15 @@
 import sys
 import tkinter as tk
+import numpy as np
 from tkinter import ttk
+
+poly_creator = np.polynomial.polynomial
+polinomio_interpolacion =[]
 
 puntosx = [];
 puntosy = [];
+
+
 
 class PrintLogger():
     def __init__(self, textbox):
@@ -65,32 +71,107 @@ class Application(ttk.Frame):
       puntosy.append(self.yValue.get())
       
     def calculateInterpolator(self):
-        print("Calculando por", self.methodCombo.get(), "para puntos:", self.points);
-        if self.methodCombo.get() == "Lagrange":
-            print("Aca hago cosas de lagrange");
-        else :
-            if self.methodCombo.get() == "Newton-Gregory progresivo": sacarCoeficientesLagrange(puntosx,puntosy);
-            else: print("Aca hago cosas de Newton-Gregory regresivo");
-        pass
+        print("\nCalculando por", self.methodCombo.get(), "para puntos:", self.points);
+        if False: print("Por favor ingrese puntos para sacar un polinomio interpolante")
 
-def sacarCoeficientesLagrange (puntos_x,puntos_y):
+        else:
+            if self.methodCombo.get() == "Lagrange":
+                print("Aca hago cosas de Lagrange");
+            else :
+                if self.methodCombo.get() == "Newton-Gregory progresivo":
+                        sacarPolinomioProgresivo(sacarCoeficientesLagrange(puntosx,puntosy,False),False)#TODO cambiar los booleanos por lo que dice la checkbox
+                        evaluarPolinomioInterpolanteEn(3) # Esto esta puesto de prueba, cuando exista el boton para evaluar el polinomio en un punto se invoca ahi.
+                        evaluarPolinomioInterpolanteEn(4)
+
+                else:
+                    sacarPolinomioRegresivo(sacarCoeficientesLagrange(puntosx,puntosy,True),True)#TODO cambiar los booleanos por lo que dice la checkbox
+                    evaluarPolinomioInterpolanteEn(3)  # Esto esta puesto de prueba, cuando exista el boton para evaluar el polinomio en un punto se invoca ahi.
+                    evaluarPolinomioInterpolanteEn(4)
+            pass
+
+def sacarCoeficientesLagrange (puntos_x,puntos_y, hayQueMostrarCalculos):
     cantidad_puntos = len(puntos_x);
     matriz_coeficientes = [[0 for x in range(cantidad_puntos)] for y in range(cantidad_puntos+1)]
     cantidad_iteraciones = cantidad_puntos -2
     for i in range(cantidad_puntos): #meto los puntos iniciales a la matriz  de coeficientes
         matriz_coeficientes[0][i] = puntos_x[i]
         matriz_coeficientes[1][i] = puntos_y[i]
-
+    numerosAMostrar = ""
     if cantidad_puntos > 1 :
         for i in range(cantidad_puntos-1):
             matriz_coeficientes[2][i] = (matriz_coeficientes[1][i+1] - matriz_coeficientes[1][i])/(matriz_coeficientes[0][i+1]-matriz_coeficientes[0][i])
-            print(matriz_coeficientes[2][i])
+            numerosAMostrar = numerosAMostrar + str(matriz_coeficientes[2][i]) + ", "
+    if hayQueMostrarCalculos:
+        print("\nLos valores ꕔ1" + " Son: " + numerosAMostrar)
     if cantidad_puntos > 2 :
         for i in range (3, cantidad_puntos+1):
+            numerosAMostrar = ""
             for j in range (cantidad_iteraciones):
                 matriz_coeficientes[i][j] = (matriz_coeficientes[i - 1][j + 1] - matriz_coeficientes[i - 1][j]) / (matriz_coeficientes[0][i-1+j]-matriz_coeficientes[0][j])
-                print(matriz_coeficientes[i][j])
+                numerosAMostrar = numerosAMostrar + str(matriz_coeficientes[i][j]) + ", "
             cantidad_iteraciones = cantidad_iteraciones - 1
+            if hayQueMostrarCalculos:
+                print("Los valores ꕔ"+str(i-1) + " Son: " + numerosAMostrar)
+    return matriz_coeficientes
+
+def sacarPolinomioProgresivo(matriz_coeficientes, hayQueMostrarCalculos):
+    coeficientes_progresivo = [];
+    for i in range (len(puntosx)):
+        coeficientes_progresivo.append(matriz_coeficientes[i+1][0])
+    if hayQueMostrarCalculos:
+        print("\nLos coeficientes del polinomio progresivo son: " + str(coeficientes_progresivo))
+    armarPolinomioInterpolanteNG(coeficientes_progresivo)
+
+
+def sacarPolinomioRegresivo(matriz_coeficientes, hayQueMostrarCalculos):
+    coeficientes_progresivo = [];
+    for i in range (len(puntosx)):
+        coeficientes_progresivo.append(matriz_coeficientes[i+1][len(puntosx)-1-i])
+    if hayQueMostrarCalculos:
+        print("\nLos coeficientes del polinomio Regresivo son: " + str(coeficientes_progresivo))
+    armarPolinomioInterpolanteNG(coeficientes_progresivo)
+
+
+
+
+def armarPolinomioInterpolanteNG(coeficientes):
+    polinomioDeRaices = [1]
+    polinomioInterpolante = [0]
+    for i in range(len(coeficientes) - 1):
+
+        polinomioDeRaices = np.polymul(polinomioDeRaices, poly_creator.polyfromroots([puntosx[i]]))
+        polinomioDeIteracion = coeficientes[i + 1] * polinomioDeRaices
+        polinomioDeIteracion = np.array(polinomioDeIteracion)
+        for j in range(i+1):
+            polinomioDeIteracion[j] = polinomioDeIteracion[j] + polinomioInterpolante[j]
+        polinomioInterpolante = polinomioDeIteracion
+
+    polinomioInterpolante[0] = polinomioInterpolante[0] + coeficientes[0]
+    mostrarPoliniomio(polinomioInterpolante,len(coeficientes))
+    polinomioInterpolante = voltearArray(polinomioInterpolante,len(coeficientes))
+    global polinomio_interpolacion
+    polinomio_interpolacion = polinomioInterpolante
+
+def voltearArray(arrayAVoltear,longitudArray):
+    arrayVolteado = []
+    for i in range(longitudArray):
+        arrayVolteado.append(arrayAVoltear[longitudArray-i-1])
+    return arrayVolteado
+
+def mostrarPoliniomio (array,longitudArray):
+    polinomio =str(array[0])
+    for i in range(1,longitudArray):
+        polinomio = polinomio + " + " + str(array[i]) + "x^" + str(i)
+    print("\nEl polinomio de interpolacion es:")
+    print(polinomio)
+
+def evaluarPolinomioInterpolanteEn(x):
+    if len(polinomio_interpolacion) == 0:
+        print("\nPor favor primero cree el polinomio interpolante antes de intentar evaluar en algun punto")
+    else:
+        valor = np.polyval(polinomio_interpolacion,x)
+        print("\nEl polinomio interpolante en el valor " + str(x) + " es: " + str(valor))
+
 
 
 
