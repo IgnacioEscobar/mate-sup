@@ -6,8 +6,8 @@ from tkinter import ttk
 poly_creator = np.polynomial.polynomial
 polinomio_interpolacion =[]
 
-puntosx = [];
-puntosy = [];
+puntosx = [1,2,3];
+puntosy = [3,7,13];
 
 
 
@@ -76,7 +76,7 @@ class Application(ttk.Frame):
 
         else:
             if self.methodCombo.get() == "Lagrange":
-                print("Aca hago cosas de Lagrange");
+                armarPolinomioInterpolanteLAG()
             else :
                 if self.methodCombo.get() == "Newton-Gregory progresivo":
                         sacarPolinomioProgresivo(sacarCoeficientesLagrange(puntosx,puntosy,False),False)#TODO cambiar los booleanos por lo que dice la checkbox
@@ -170,6 +170,15 @@ def armarPolinomioInterpolanteNGREG(coeficientes):
     global polinomio_interpolacion
     polinomio_interpolacion = polinomioInterpolante
 
+def armarPolinomioInterpolanteLAG():
+    polinomioInterpolante = 0
+    polinomioDeIteracion = [0]
+    for i in range (len(puntosx)):
+        for j in range (len(puntosx)):
+            if j == i : pass
+            else : polinomioDeIteracion = np.polymul (polinomioDeIteracion, (poly_creator.polyfromroots([puntosx[j]])/(puntosx[i]-puntosx[j])))
+        polinomioInterpolante = np.polyadd (polinomioInterpolante, np.polymul(puntosy[i],polinomioDeIteracion))
+    print(polinomioInterpolante)
 
 def voltearArray(arrayAVoltear,longitudArray):
     arrayVolteado = []
