@@ -5,9 +5,8 @@ from tkinter import ttk
 
 poly_creator = np.polynomial.polynomial
 polinomio_interpolacion =[]
-
-puntosx = [1,2,3];
-puntosy = [3,7,13];
+puntosx = []
+puntosy = []
 
 
 
@@ -71,22 +70,23 @@ class Application(ttk.Frame):
       puntosy.append(self.yValue.get())
       
     def calculateInterpolator(self):
-        print("\nCalculando por", self.methodCombo.get(), "para puntos:", self.points);
-        if False: print("Por favor ingrese puntos para sacar un polinomio interpolante")
-
+        if len(self.points) == 0: print("Por favor ingrese puntos para sacar un polinomio interpolante")
         else:
+            print("\nCalculando por", self.methodCombo.get(), "para puntos:", self.points);
             if self.methodCombo.get() == "Lagrange":
-                armarPolinomioInterpolanteLAG()
-            else :
-                if self.methodCombo.get() == "Newton-Gregory progresivo":
-                        sacarPolinomioProgresivo(sacarCoeficientesLagrange(puntosx,puntosy,False),False)#TODO cambiar los booleanos por lo que dice la checkbox
-                        evaluarPolinomioInterpolanteEn(3) # Esto esta puesto de prueba, cuando exista el boton para evaluar el polinomio en un punto se invoca ahi.
-                        evaluarPolinomioInterpolanteEn(4)
+                armarPolinomioInterpolanteLAG(True) #TODO cambiar esto por lo que dice la checkbox
+                evaluarPolinomioInterpolanteEn(3)  # Esto esta puesto de prueba, cuando exista el boton para evaluar el polinomio en un punto se invoca ahi.
+                evaluarPolinomioInterpolanteEn(4)
 
-                else:
-                    sacarPolinomioRegresivo(sacarCoeficientesLagrange(puntosx,puntosy,True),True)#TODO cambiar los booleanos por lo que dice la checkbox
-                    evaluarPolinomioInterpolanteEn(3)  # Esto esta puesto de prueba, cuando exista el boton para evaluar el polinomio en un punto se invoca ahi.
-                    evaluarPolinomioInterpolanteEn(4)
+            if self.methodCombo.get() == "Newton-Gregory progresivo":
+                sacarPolinomioProgresivo(sacarCoeficientesLagrange(puntosx,puntosy,True),True)#TODO cambiar los booleanos por lo que dice la checkbox
+                evaluarPolinomioInterpolanteEn(3) # Esto esta puesto de prueba, cuando exista el boton para evaluar el polinomio en un punto se invoca ahi.
+                evaluarPolinomioInterpolanteEn(4)
+
+            if self.methodCombo.get() == "Newton-Gregory regresivo":
+                sacarPolinomioRegresivo(sacarCoeficientesLagrange(puntosx,puntosy,True),True)#TODO cambiar los booleanos por lo que dice la checkbox
+                evaluarPolinomioInterpolanteEn(3)  # Esto esta puesto de prueba, cuando exista el boton para evaluar el polinomio en un punto se invoca ahi.
+                evaluarPolinomioInterpolanteEn(4)
             pass
 
 def sacarCoeficientesLagrange (puntos_x,puntos_y, hayQueMostrarCalculos):
@@ -170,15 +170,30 @@ def armarPolinomioInterpolanteNGREG(coeficientes):
     global polinomio_interpolacion
     polinomio_interpolacion = polinomioInterpolante
 
-def armarPolinomioInterpolanteLAG():
-    polinomioInterpolante = 0
-    polinomioDeIteracion = [0]
-    for i in range (len(puntosx)):
-        for j in range (len(puntosx)):
-            if j == i : pass
-            else : polinomioDeIteracion = np.polymul (polinomioDeIteracion, (poly_creator.polyfromroots([puntosx[j]])/(puntosx[i]-puntosx[j])))
-        polinomioInterpolante = np.polyadd (polinomioInterpolante, np.polymul(puntosy[i],polinomioDeIteracion))
-    print(polinomioInterpolante)
+def armarPolinomioInterpolanteLAG(hayQueMostrarCalculos):
+    polinomioInterpolante = [0]
+    polinomioInterpolante = np.resize(polinomioInterpolante, len(puntosy))
+    for i in range(len(puntosy)):
+        polinomioDeIteracion = [1]
+
+        for j in range(len(puntosy)):
+            if i == j: pass
+            else:
+                numerador = poly_creator.polyfromroots([puntosx[j]])
+                denominador = puntosx[i] - puntosx[j]
+                polinomioDeIteracion = np.polymul(polinomioDeIteracion,(numerador/denominador))
+
+        if hayQueMostrarCalculos:
+            mostrarLn(polinomioDeIteracion,len(puntosy),i)
+        polinomioDeIteracion = np.polymul(polinomioDeIteracion,puntosy[i])
+        polinomioDeIteracion = np.array(polinomioDeIteracion)
+
+        for q in range(len(puntosy)):
+             polinomioDeIteracion[q] = polinomioDeIteracion[q] + polinomioInterpolante[q]
+        polinomioInterpolante = polinomioDeIteracion
+    global polinomio_interpolacion
+    polinomio_interpolacion = polinomioInterpolante
+    mostrarPoliniomio(polinomioInterpolante,(len(puntosy)))
 
 def voltearArray(arrayAVoltear,longitudArray):
     arrayVolteado = []
@@ -193,12 +208,18 @@ def mostrarPoliniomio (array,longitudArray):
     print("\nEl polinomio de interpolacion es:")
     print(polinomio)
 
+def mostrarLn (array,longitudArray,n):
+    polinomio =str(array[0])
+    for i in range(1,longitudArray):
+        polinomio = polinomio + " + " + str(array[i]) + "x^" + str(i)
+    print("\nEl valor de L" + str(n) + " es: " + str(polinomio))
+
 def evaluarPolinomioInterpolanteEn(x):
     if len(polinomio_interpolacion) == 0:
         print("\nPor favor primero cree el polinomio interpolante antes de intentar evaluar en algun punto")
     else:
         valor = np.polyval(polinomio_interpolacion,x)
-        print("\nEl polinomio interpolante en el valor " + str(x) + " es: " + str(valor))
+        print("\nEl valor del polinomio interpolante en el punto " + str(x) + " es: " + str(valor))
 
 
 
