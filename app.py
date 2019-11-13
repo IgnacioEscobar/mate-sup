@@ -25,6 +25,7 @@ class Application(ttk.Frame):
     def __init__(self, main_window):
       super().__init__(main_window)
       main_window.title("FINTER")
+
       self.points = []
       self.xValue = tk.IntVar()
       self.yValue = tk.IntVar()
@@ -45,9 +46,24 @@ class Application(ttk.Frame):
       self.addButton.configure(pady=10)
       self.addButton.pack()
 
+      self.removeButton = tk.Button(self, text="Sacar punto", command=self.removePoint)
+      self.removeButton.configure(pady=10)
+      self.removeButton.pack()
+
+      # Log points
+      self.puntosListbox = tk.Listbox(self)
+      self.puntosListbox.pack()
+
+      self.methodsLabel = tk.Label(self, text="Metodos de calculo")
+      self.methodsLabel.pack()
+
       self.methods = ["Lagrange", "Newton-Gregory progresivo", "Newton-Gregory regresivo"]
       self.methodCombo = ttk.Combobox(self, values=self.methods)
       self.methodCombo.pack()
+
+      self.checkButtonValue = tk.IntVar()
+      self.checkButton = tk.Checkbutton(self, text="Mostrar pasos de calculo", variable=self.checkButtonValue)
+      self.checkButton.pack()
 
       self.calcButton = tk.Button(self, text="Calcular polinomio interpolante", command=self.calculateInterpolator)
       self.calcButton.configure(pady=10)
@@ -68,8 +84,35 @@ class Application(ttk.Frame):
       self.points.append({'x': self.xValue.get(), 'y': self.yValue.get()})
       puntosx.append(self.xValue.get())
       puntosy.append(self.yValue.get())
-      
+      self.puntosListbox.insert(tk.END, f"({self.xValue.get()}, {self.yValue.get()})")
+
+    def removePoint(self):
+      if not self.points:
+          print("No hay puntos que borrar")
+      elif not self.puntosListbox.curselection():
+          print("No ha seleccionado ningun punto")
+      else:
+        point = self.puntosListbox.get(self.puntosListbox.curselection())\
+            .replace('(', '')\
+            .replace(')', '')\
+            .replace(',', '')\
+            .split()
+
+        self.points = [
+            p for p in self.points if p['x'] != float(point[0]) or p['y'] != float(point[1])
+        ]
+
+        self.puntosListbox.delete(self.puntosListbox.curselection())
+
+        global puntosx
+        puntosx = list(map(lambda p: p['x'], self.points))
+
+        global puntosy
+        puntosy = list(map(lambda p: p['y'], self.points))
+
     def calculateInterpolator(self):
+        # TODO guille aca esta el valor del checkbox
+        hayQueMostrarCalculos = self.checkButtonValue.get()
         if len(self.points) == 0: print("Por favor ingrese puntos para sacar un polinomio interpolante")
         else:
             print("\nCalculando por", self.methodCombo.get(), "para puntos:", self.points);
