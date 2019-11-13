@@ -81,10 +81,15 @@ class Application(ttk.Frame):
 
 
     def addPoint(self):
-      self.points.append({'x': self.xValue.get(), 'y': self.yValue.get()})
-      puntosx.append(self.xValue.get())
-      puntosy.append(self.yValue.get())
-      self.puntosListbox.insert(tk.END, f"({self.xValue.get()}, {self.yValue.get()})")
+      point_to_add = {'x': self.xValue.get(), 'y': self.yValue.get()}
+
+      if point_to_add in self.points:
+          print(f"Ya agrego el punto ({point_to_add['x']}, {point_to_add['y']})")
+      else:
+          self.points.append(point_to_add)
+          puntosx.append(self.xValue.get())
+          puntosy.append(self.yValue.get())
+          self.puntosListbox.insert(tk.END, f"({self.xValue.get()}, {self.yValue.get()})")
 
     def removePoint(self):
       if not self.points:
