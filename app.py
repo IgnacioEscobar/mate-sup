@@ -7,6 +7,7 @@ poly_creator = np.polynomial.polynomial
 polinomio_interpolacion =[]
 puntosx = []
 puntosy = []
+estaElPunto00 = False
 
 
 
@@ -82,7 +83,9 @@ class Application(ttk.Frame):
 
     def addPoint(self):
       point_to_add = {'x': self.xValue.get(), 'y': self.yValue.get()}
-
+      if {point_to_add['x']} == {0} and  {point_to_add['y']} == {0}:
+          global estaElPunto00
+          estaElPunto00 = True
       if point_to_add in self.points:
           print(f"Ya agrego el punto ({point_to_add['x']}, {point_to_add['y']})")
       else:
@@ -122,17 +125,17 @@ class Application(ttk.Frame):
         else:
             print("\nCalculando por", self.methodCombo.get(), "para puntos:", self.points);
             if self.methodCombo.get() == "Lagrange":
-                armarPolinomioInterpolanteLAG(True) #TODO cambiar esto por lo que dice la checkbox
+                armarPolinomioInterpolanteLAG( hayQueMostrarCalculos) #TODO cambiar esto por lo que dice la checkbox
                 evaluarPolinomioInterpolanteEn(3)  # Esto esta puesto de prueba, cuando exista el boton para evaluar el polinomio en un punto se invoca ahi.
                 evaluarPolinomioInterpolanteEn(4)
 
             if self.methodCombo.get() == "Newton-Gregory progresivo":
-                sacarPolinomioProgresivo(sacarCoeficientesLagrange(puntosx,puntosy,True),True)#TODO cambiar los booleanos por lo que dice la checkbox
+                sacarPolinomioProgresivo(sacarCoeficientesLagrange(puntosx,puntosy, hayQueMostrarCalculos), hayQueMostrarCalculos)#TODO cambiar los booleanos por lo que dice la checkbox
                 evaluarPolinomioInterpolanteEn(3) # Esto esta puesto de prueba, cuando exista el boton para evaluar el polinomio en un punto se invoca ahi.
                 evaluarPolinomioInterpolanteEn(4)
 
             if self.methodCombo.get() == "Newton-Gregory regresivo":
-                sacarPolinomioRegresivo(sacarCoeficientesLagrange(puntosx,puntosy,True),True)#TODO cambiar los booleanos por lo que dice la checkbox
+                sacarPolinomioRegresivo(sacarCoeficientesLagrange(puntosx,puntosy, hayQueMostrarCalculos), hayQueMostrarCalculos)#TODO cambiar los booleanos por lo que dice la checkbox
                 evaluarPolinomioInterpolanteEn(3)  # Esto esta puesto de prueba, cuando exista el boton para evaluar el polinomio en un punto se invoca ahi.
                 evaluarPolinomioInterpolanteEn(4)
             pass
@@ -185,9 +188,15 @@ def sacarPolinomioRegresivo(matriz_coeficientes, hayQueMostrarCalculos):
 def armarPolinomioInterpolanteNGPROG(coeficientes):
     polinomioDeRaices = [1]
     polinomioInterpolante = [0]
+    cantidadPuntos = len(coeficientes)
     for i in range(len(coeficientes) - 1):
-
-        polinomioDeRaices = np.polymul(polinomioDeRaices, poly_creator.polyfromroots([puntosx[i]]))
+        if puntosx[i] == 0:
+            polinomioDeRaices = poly_creator.polymulx(polinomioDeRaices)
+        else:
+             if polinomioDeRaices[0] == 0 and polinomioDeRaices[1] == 1 and len(polinomioDeRaices) == 2:
+                 polinomioDeRaices = poly_creator.polymulx(poly_creator.polyfromroots([puntosx[i]]))
+             else:
+                 polinomioDeRaices = np.polymul(polinomioDeRaices,poly_creator.polyfromroots([puntosx[i]]))
         polinomioDeIteracion = coeficientes[i + 1] * polinomioDeRaices
         polinomioDeIteracion = np.array(polinomioDeIteracion)
         for j in range(i+1):
@@ -195,17 +204,26 @@ def armarPolinomioInterpolanteNGPROG(coeficientes):
         polinomioInterpolante = polinomioDeIteracion
 
     polinomioInterpolante[0] = polinomioInterpolante[0] + coeficientes[0]
-    mostrarPoliniomio(polinomioInterpolante,len(coeficientes))
-    polinomioInterpolante = voltearArray(polinomioInterpolante,len(coeficientes))
+
+    mostrarPoliniomio(polinomioInterpolante,cantidadPuntos)
+    polinomioInterpolante = voltearArray(polinomioInterpolante,cantidadPuntos)
     global polinomio_interpolacion
     polinomio_interpolacion = polinomioInterpolante
 
 def armarPolinomioInterpolanteNGREG(coeficientes):
     polinomioDeRaices = [1]
     polinomioInterpolante = [0]
+    cantidadPuntos = len(coeficientes)
     for i in range(len(coeficientes) - 1):
+        if puntosx[(len(coeficientes)-1-i)] == 0:
+            polinomioDeRaices = poly_creator.polymulx(polinomioDeRaices)
+        else:
+            if polinomioDeRaices[0] == 0 and polinomioDeRaices[1] == 1 and len(polinomioDeRaices) == 2:
+                polinomioDeRaices = poly_creator.polymulx(poly_creator.polyfromroots([puntosx[(len(coeficientes)-1-i)]]))
+            else:
+                polinomioDeRaices = np.polymul(polinomioDeRaices, poly_creator.polyfromroots([puntosx[(len(coeficientes)-1-i)]]))
 
-        polinomioDeRaices = np.polymul(polinomioDeRaices, poly_creator.polyfromroots([puntosx[(len(coeficientes)-1-i)]]))
+
         polinomioDeIteracion = coeficientes[i + 1] * polinomioDeRaices
         polinomioDeIteracion = np.array(polinomioDeIteracion)
         for j in range(i+1):
@@ -213,35 +231,52 @@ def armarPolinomioInterpolanteNGREG(coeficientes):
         polinomioInterpolante = polinomioDeIteracion
 
     polinomioInterpolante[0] = polinomioInterpolante[0] + coeficientes[0]
-    mostrarPoliniomio(polinomioInterpolante,len(coeficientes))
-    polinomioInterpolante = voltearArray(polinomioInterpolante,len(coeficientes))
+    mostrarPoliniomio(polinomioInterpolante,cantidadPuntos)
+    polinomioInterpolante = voltearArray(polinomioInterpolante,cantidadPuntos)
     global polinomio_interpolacion
     polinomio_interpolacion = polinomioInterpolante
 
 def armarPolinomioInterpolanteLAG(hayQueMostrarCalculos):
     polinomioInterpolante = [0]
     polinomioInterpolante = np.resize(polinomioInterpolante, len(puntosy))
+    cantidadPuntos = len(puntosy)
     for i in range(len(puntosy)):
         polinomioDeIteracion = [1]
-
         for j in range(len(puntosy)):
             if i == j: pass
             else:
                 numerador = poly_creator.polyfromroots([puntosx[j]])
                 denominador = puntosx[i] - puntosx[j]
-                polinomioDeIteracion = np.polymul(polinomioDeIteracion,(numerador/denominador))
+                if puntosx[j] == 0:
+                    division = poly_creator.polymulx([1/denominador])
+                else:
+                    division = (numerador/denominador)
+                if  polinomioDeIteracion[0] == 0 and polinomioDeIteracion[1] == 1 and len(polinomioDeIteracion) == 2:
+                    polinomioDeIteracion = poly_creator.polymulx(division)
+                else:
+                    if polinomioDeIteracion[0] == 1 and len(polinomioDeIteracion) == 1:
+                        polinomioDeIteracion = division
+                    else:
+                        if division[0] == 1 and len(polinomioDeIteracion) == 1:
+                            pass
+                        else:
+                            polinomioDeIteracion = np.polymul(polinomioDeIteracion, division)
+                            if (abs(polinomioDeIteracion[1]) == 1 and len(polinomioDeIteracion) == 2) or (abs(division[1]) == 1.0 and len(division) == 2):
+
+                                polinomioDeIteracion = poly_creator.polymulx(polinomioDeIteracion)
 
         if hayQueMostrarCalculos:
             mostrarLn(polinomioDeIteracion,len(puntosy),i)
-        polinomioDeIteracion = np.polymul(polinomioDeIteracion,puntosy[i])
+        polinomioDeIteracion = polinomioDeIteracion * puntosy[i]
         polinomioDeIteracion = np.array(polinomioDeIteracion)
-
-        for q in range(len(puntosy)):
-             polinomioDeIteracion[q] = polinomioDeIteracion[q] + polinomioInterpolante[q]
+        if puntosx[i] == 0:
+            pass
+        else:
+            for q in range(cantidadPuntos):
+                 polinomioDeIteracion[q] = polinomioDeIteracion[q] + polinomioInterpolante[q]
         polinomioInterpolante = polinomioDeIteracion
-    global polinomio_interpolacion
-    polinomio_interpolacion = polinomioInterpolante
-    mostrarPoliniomio(polinomioInterpolante,(len(puntosy)))
+        sacarPolinomioProgresivo(sacarCoeficientesLagrange(puntosx,puntosy, False), False)
+
 
 def voltearArray(arrayAVoltear,longitudArray):
     arrayVolteado = []
