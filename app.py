@@ -66,14 +66,6 @@ class Application(ttk.Frame):
       self.checkButton = tk.Checkbutton(self, text="Mostrar pasos de calculo", variable=self.checkButtonValue)
       self.checkButton.pack()
 
-      self.kValue = tk.IntVar()
-
-      self.evalPoliLabel = tk.Label(self, text="Especializar el polinomio en valor K")
-      self.evalPoliLabel.pack()
-
-      self.evalPoliInput = tk.Entry(self, text="Valor K", textvariable=self.kValue)
-      self.evalPoliInput.pack()
-
       self.calcButton = tk.Button(self, text="Calcular polinomio interpolante", command=self.calculateInterpolator)
       self.calcButton.configure(pady=10)
       self.calcButton.pack()
@@ -97,22 +89,10 @@ class Application(ttk.Frame):
       if point_to_add in self.points:
           print(f"Ya agrego el punto ({point_to_add['x']}, {point_to_add['y']})")
       else:
-          def take_x(_point):
-              return _point['x']
-          
           self.points.append(point_to_add)
-          self.points.sort(key=take_x)
-
-          global puntosx
-          puntosx = list(map(lambda _point: _point['x'], self.points))
-
-          global puntosy
-          puntosy = list(map(lambda _point: _point['y'], self.points))
-
-          self.puntosListbox.delete(0, tk.END)
-
-          for point in self.points:
-              self.puntosListbox.insert(tk.END, f"({point['x']}, {point['y']})")
+          puntosx.append(self.xValue.get())
+          puntosy.append(self.yValue.get())
+          self.puntosListbox.insert(tk.END, f"({self.xValue.get()}, {self.yValue.get()})")
 
     def removePoint(self):
       if not self.points:
@@ -146,15 +126,18 @@ class Application(ttk.Frame):
             print("\nCalculando por", self.methodCombo.get(), "para puntos:", self.points);
             if self.methodCombo.get() == "Lagrange":
                 armarPolinomioInterpolanteLAG( hayQueMostrarCalculos) #TODO cambiar esto por lo que dice la checkbox
-                evaluarPolinomioInterpolanteEn(self.kValue.get())
+                evaluarPolinomioInterpolanteEn(3)  # Esto esta puesto de prueba, cuando exista el boton para evaluar el polinomio en un punto se invoca ahi.
+                evaluarPolinomioInterpolanteEn(4)
 
             if self.methodCombo.get() == "Newton-Gregory progresivo":
                 sacarPolinomioProgresivo(sacarCoeficientesLagrange(puntosx,puntosy, hayQueMostrarCalculos), hayQueMostrarCalculos)#TODO cambiar los booleanos por lo que dice la checkbox
-                evaluarPolinomioInterpolanteEn(self.kValue.get())
+                evaluarPolinomioInterpolanteEn(3) # Esto esta puesto de prueba, cuando exista el boton para evaluar el polinomio en un punto se invoca ahi.
+                evaluarPolinomioInterpolanteEn(4)
 
             if self.methodCombo.get() == "Newton-Gregory regresivo":
                 sacarPolinomioRegresivo(sacarCoeficientesLagrange(puntosx,puntosy, hayQueMostrarCalculos), hayQueMostrarCalculos)#TODO cambiar los booleanos por lo que dice la checkbox
-                evaluarPolinomioInterpolanteEn(self.kValue.get())
+                evaluarPolinomioInterpolanteEn(3)  # Esto esta puesto de prueba, cuando exista el boton para evaluar el polinomio en un punto se invoca ahi.
+                evaluarPolinomioInterpolanteEn(4)
             pass
 
 def sacarCoeficientesLagrange (puntos_x,puntos_y, hayQueMostrarCalculos):
