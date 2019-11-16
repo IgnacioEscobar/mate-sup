@@ -208,24 +208,22 @@ def sacarPolinomioRegresivo(matriz_coeficientes, hayQueMostrarCalculos):
 
 def armarPolinomioInterpolanteNGPROG(coeficientes):
     polinomioDeRaices = [1]
+    polinomioDeRaices = np.resize(polinomioDeRaices, 1)
     polinomioInterpolante = [0]
     cantidadPuntos = len(coeficientes)
+
     for i in range(len(coeficientes) - 1):
-        if puntosx[i] == 0:
-            polinomioDeRaices = poly_creator.polymulx(polinomioDeRaices)
-        else:
-            if polinomioDeRaices[0] == 0 and polinomioDeRaices[1] == 1 and len(polinomioDeRaices) == 2:
-                polinomioDeRaices = poly_creator.polymulx(poly_creator.polyfromroots([puntosx[i]]))
-            else:
-                poli1 = polinomioDeRaices * (-1 * puntosx[i])
+        polinomioRaicesDeEstaIteracion = poly_creator.polyfromroots([puntosx[i]])
+        poli1 = poly_creator.polymulx(polinomioDeRaices)
+        poli2 = polinomioDeRaices * polinomioRaicesDeEstaIteracion[0]
 
-                poli2 = poly_creator.polymulx((polinomioDeRaices))
+        for q in range(len(poli2)):
+            poli1[q] = poli1[q] + poli2[q]
+        polinomioDeRaices = poli1
 
-                for j in range(3):
-                    poli2[j] = poli2[j] + poli1[j]
-                polinomioDeRaices = poli2
-        polinomioDeIteracion = coeficientes[i + 1] * polinomioDeRaices
-        polinomioDeIteracion = np.array(polinomioDeIteracion)
+        polinomioDeIteracion = polinomioDeRaices * coeficientes[i+1]
+
+
         for j in range(i + 1):
             polinomioDeIteracion[j] = polinomioDeIteracion[j] + polinomioInterpolante[j]
         polinomioInterpolante = polinomioDeIteracion
@@ -272,29 +270,24 @@ def armarPolinomioInterpolanteLAG(hayQueMostrarCalculos):
     cantidadPuntos = len(puntosy)
     for i in range(len(puntosy)):
         polinomioDeIteracion = [1]
+        polinomioDeIteracion = np.resize( polinomioDeIteracion, len(puntosy))
         for j in range(len(puntosy)):
             if i == j:
                 pass
             else:
+
                 numerador = poly_creator.polyfromroots([puntosx[j]])
                 denominador = puntosx[i] - puntosx[j]
-                if puntosx[j] == 0:
-                    division = poly_creator.polymulx([1 / denominador])
-                else:
-                    division = (numerador / denominador)
-                if polinomioDeIteracion[0] == 0 and polinomioDeIteracion[1] == 1 and len(polinomioDeIteracion) == 2:
-                    polinomioDeIteracion = poly_creator.polymulx(division)
-                else:
-                    if polinomioDeIteracion[0] == 1 and len(polinomioDeIteracion) == 1:
-                        polinomioDeIteracion = division
-                    else:
-                        if division[0] == 1 and len(polinomioDeIteracion) == 1:
-                            pass
-                        else:
-                            polinomioDeIteracion = np.polymul(polinomioDeIteracion, division)
-                            if (abs(polinomioDeIteracion[1]) == 1 and len(polinomioDeIteracion) == 2) or (
-                                    abs(division[1]) == 1.0 and len(division) == 2):
-                                polinomioDeIteracion = poly_creator.polymulx(polinomioDeIteracion)
+
+                poli1 = polinomioDeIteracion * numerador[1]
+                poli1 = poly_creator.polymulx(poli1)
+                poli2 =  polinomioDeIteracion * numerador[0]
+
+                for q in range(len(poli2)):
+                    poli1[q] = poli2[q] + poli1[q]
+
+                poli1 = poli1 * (1/denominador)
+                polinomioDeIteracion = poli1
 
         if hayQueMostrarCalculos:
             mostrarLn(polinomioDeIteracion, len(puntosy), i)
@@ -306,7 +299,7 @@ def armarPolinomioInterpolanteLAG(hayQueMostrarCalculos):
             for q in range(cantidadPuntos):
                 polinomioDeIteracion[q] = polinomioDeIteracion[q] + polinomioInterpolante[q]
         polinomioInterpolante = polinomioDeIteracion
-        sacarPolinomioProgresivo(sacarCoeficientesLagrange(puntosx, puntosy, False), False)
+    sacarPolinomioProgresivo(sacarCoeficientesLagrange(puntosx, puntosy, False), False)
 
 
 def voltearArray(arrayAVoltear, longitudArray):
